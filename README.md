@@ -14,3 +14,11 @@ This project was started to address the following use cases
 This module requires the following Python modules
 - kafka-python
 
+# TODO
+
+- [ ] Support for different encodings
+  - [ ] Avro
+  - [ ] JSON
+  - [ ] Protobuff
+- [ ] Support Schema validation
+- [ ] Create tests
