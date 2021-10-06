@@ -5,16 +5,18 @@
       bootstrap_servers: 'localhost:9092'
 
   tasks:
-    - name: debug
-      debug:
-        msg: "{{ client_properties }}"
+    - name: notify
+      kafka_notify:
+        producer_config:
+          bootstrap_servers: 'localhost:9092'
+        msg: "my test message"
+        topic: testTopic
     - name: create file
       file:
-        path: /Users/brejohns/git-repos/ansible-kafka-notify/testFile
+        path: ~/testFile
         state: touch
       register: msg
       notify: test
-
 
   handlers:
     - name: test
