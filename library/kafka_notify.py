@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 from __future__ import (absolute_import, division, print_function)
+
 __metaclass__ = type
 
 DOCUMENTATION = """
@@ -10,21 +11,22 @@ short_description: Send Messages to Kafka
 description: Produces new messages to Kafka cluster
 author: "Brett Johnson (@sdbrett)"
 options:
-  topic:
-    type: str
-    description:
-      - The topic name to publish the message to
-  producer_config:
-    type: dict
-    elements: str
-    description:
-      - producer configuration parameters
-    required: true
-  msg:
-    type: str
-    description:
-      - Message to send
-    version_added: 1.0.0
+	topic:
+		type: str
+		description:
+			- The topic name to publish the message to
+	producer_config:
+		type: dict
+		elements: str
+		description:
+			- producer configuration parameters
+			- The full list of configuration parameters are available here: https://kafka-python.readthedocs.io/en/master/apidoc/KafkaProducer.html
+		required: true
+	msg:
+		type: str
+		description:
+			- Message to send
+version_added: 1.0.0
 """
 
 from ansible.module_utils.basic import AnsibleModule, missing_required_lib
@@ -40,7 +42,6 @@ else:
 
 
 def main():
-
 	module = AnsibleModule(
 		argument_spec=dict(
 			topic=dict(type='str'),
@@ -59,25 +60,11 @@ def main():
 	producer_config = module.params['producer_config']
 	msg = module.params['msg']
 
-
-	producer = KafkaProducer(bootstrap_servers='localhost:9092')
+	producer = KafkaProducer(**producer_config)
 	producer.send(topic, msg.encode())
 	producer.flush()
 	producer.close()
-
-
-	# topic = 'testTopic'
-	# config = {
-	# 	'bootstrap_servers': 'localhost:9092'
-	# }
-	# producer = KafkaProducer(**config)
-	# msg = 'testMessage'
-	#
-	# producer.send(topic, b'%b' % msg.encode())
-	# producer.flush()
-	# producer.close()
 	module.exit_json(msg="OK")
-
 
 if __name__ == "__main__":
 	main()

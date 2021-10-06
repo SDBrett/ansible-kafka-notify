@@ -2,9 +2,12 @@
   vars:
     topic: testTopic
     client_properties:
-      bootstrap_servers: localhost:9092
+      bootstrap_servers: 'localhost:9092'
 
   tasks:
+    - name: debug
+      debug:
+        msg: "{{ client_properties }}"
     - name: create file
       file:
         path: /Users/brejohns/git-repos/ansible-kafka-notify/testFile
@@ -19,3 +22,4 @@
         producer_config: "{{ client_properties }}"
         msg: "{{ msg }}"
         topic: "{{ topic }}"
+
