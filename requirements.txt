@@ -1,1 +1,8 @@
 kafka-python==2.0.2
+pytest==6.2.5
+ansible==4.6.0
+Jinja2==3.0.2
+PyYAML==5.4.1
+cryptography==35.0.0
+packaging==21.0
+avro==1.10.2

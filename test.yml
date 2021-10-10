@@ -1,7 +1,7 @@
 - hosts: localhost
   vars:
     topic: testTopic
-    client_properties:
+    producer_config:
       bootstrap_servers: 'localhost:9092'
 
   tasks:
@@ -21,7 +21,7 @@
   handlers:
     - name: test
       kafka_notify:
-        producer_config: "{{ client_properties }}"
+        producer_config: "{{ producer_config }}"
         msg: "{{ msg }}"
         topic: "{{ topic }}"
 
