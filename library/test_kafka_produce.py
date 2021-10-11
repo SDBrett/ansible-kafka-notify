@@ -3,6 +3,8 @@ from __future__ import (absolute_import, division, print_function)
 __metaclass__ = type
 
 import json
+import unittest
+
 import pytest
 from ansible_collections.community.general.tests.unit.compat.mock import Mock, patch
 import kafka_produce
@@ -135,3 +137,6 @@ class TestKafkaProduceModule(ModuleTestCase):
             password = kafka_produce.set_ssl_password(
                 item['module_params'])
             self.assertEqual(password, item['expect'])
+
+
+
