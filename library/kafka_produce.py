@@ -104,6 +104,8 @@ from ansible.module_utils.basic import AnsibleModule
 import io
 from kafka import KafkaProducer
 import avro.schema
+from avro.io import DatumWriter, DatumReader
+import json
 
 argument_spec = dict(
     topic=dict(type='str', required=True),
@@ -149,25 +151,28 @@ def set_ssl_password(params):
     return password
 
 
-def serialize(serializer, schema, string):
-    if string is None:
+def serialize(serializer, schema, message):
+    if message is None:
         return None
 
-    match serializer:
-        case 'avro':
-            return encode_avro(schema, string)
+    assert schema is not None, \
+        "Schema must be provided to serialize"
+
+    if serializer == 'avro':
+        schema_obj = avro.schema.parse(json.dumps(schema))
+        return encode_avro(schema_obj, message)
 
 
-def encode_avro(schema, string):
+def encode_avro(schema, message):
     writer = avro.io.DatumWriter(schema)
     bytes_writer = io.BytesIO()
     encoder = avro.io.BinaryEncoder(bytes_writer)
-    writer.write(string, encoder)
+    writer.write(message, encoder)
 
     return bytes_writer.getvalue()
 
 
-def produce_message(producer_config, key, value, topic):
+def produce_message(producer_config, topic, key, value):
     producer = KafkaProducer(**producer_config)
     producer.send(topic,  key=key, value=value)
     producer.flush()
@@ -182,9 +187,9 @@ def main():
     msg_value = module.params['msg_value']
     msg_key = module.params['msg_key']
     value_serializer = module.params['value_serializer']
-    key_serializer = module.params['value_serializer']
-    value_schema = module.params['avro_value_schema']
-    key_schema = module.params['avro_key_schema']
+    key_serializer = module.params['key_serializer']
+    value_schema = module.params['value_schema']
+    key_schema = module.params['key_schema']
 
     # Set SASL auth password
     if producer_config['sasl_mechanism'] in ('PLAIN', 'SCRAM-SHA-256', 'SCRAM-SHA-512'):
