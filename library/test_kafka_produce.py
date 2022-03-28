@@ -3,14 +3,11 @@ from __future__ import (absolute_import, division, print_function)
 __metaclass__ = type
 
 import json
-import unittest
-from unittest.mock import patch
 
 import avro
-import pytest
-from ansible_collections.community.general.tests.unit.compat.mock import Mock, patch
+from ansible_collections.community.general.tests.unit.compat.mock import patch
 import kafka_produce
-from ansible_collections.community.general.tests.unit.plugins.modules.utils import AnsibleExitJson, AnsibleFailJson, \
+from ansible_collections.community.general.tests.unit.plugins.modules.utils import AnsibleFailJson, \
     ModuleTestCase, set_module_args
 
 
@@ -34,7 +31,7 @@ class TestKafkaProduceModule(ModuleTestCase):
         with self.assertRaises(AnsibleFailJson):
             set_module_args({
                 'topic': 'topicName',
-                'msg': 'myMessage'
+                'msg_value': 'myMessage'
             })
             self.module.main()
 
@@ -45,7 +42,7 @@ class TestKafkaProduceModule(ModuleTestCase):
                 'producer_config': {
                     'bootstrap_servers': 'localhost:9092'
                 },
-                'msg': 'myMessage'
+                'msg_value': 'myMessage'
             })
             self.module.main()
 
@@ -68,7 +65,7 @@ class TestKafkaProduceModule(ModuleTestCase):
                 'producer_config': {
                     'bootstrap_servers': 'localhost:9092'
                 },
-                'msg': 'myMessage',
+                'msg_value': 'myMessage',
                 'topic': 'mytopic',
                 'value_serializer': 'avro'
             })
@@ -80,7 +77,7 @@ class TestKafkaProduceModule(ModuleTestCase):
                 'producer_config': {
                     'bootstrap_servers': 'localhost:9092'
                 },
-                'msg': 'myMessage',
+                'msg_value': 'myMessage',
                 'topic': 'mytopic',
                 'key_serializer': 'avro',
             })
@@ -96,7 +93,7 @@ class TestSSLPasswordPriorities(ModuleTestCase):
     def tearDown(self):
         super(TestSSLPasswordPriorities, self).tearDown()
 
-    def test__sasl_password_parameter_priority(self):
+    def test_sasl_password_parameter_priority(self):
         sasl_password_test_params = [
             {
                 'module_params': {
@@ -249,9 +246,6 @@ class TestAvroEncoding(ModuleTestCase):
                 kafka_produce.encode_avro(schema=json.dumps(item['schema']), message=item['string'])
 
 
-
-
-
 @patch("kafka_produce.KafkaProducer")
 def test_produce_message(mock_producer_class):
     producer_config = {
@@ -266,4 +260,3 @@ def test_produce_message(mock_producer_class):
 
     mock_producer.send.assert_called_with('topic', key=key.encode(), value=message.encode(), )
     mock_producer.flush.assert_called_once()
-

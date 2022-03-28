@@ -3,8 +3,9 @@ from kafka import KafkaConsumer
 
 def main():
 	consumer = KafkaConsumer(
-		"testTopic",
+		"mytopic",
 		bootstrap_servers='localhost:9092',
+		group_id='test',
 	)
 
 	print("running")

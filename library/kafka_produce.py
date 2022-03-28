@@ -104,7 +104,7 @@ from ansible.module_utils.basic import AnsibleModule
 import io
 from kafka import KafkaProducer
 import avro.schema
-from avro.io import DatumWriter, DatumReader
+from avro.io import DatumWriter
 import json
 
 argument_spec = dict(
@@ -116,8 +116,9 @@ argument_spec = dict(
     sasl_plain_password=dict(type=str, no_log=True),
     value_serializer=dict(type=str, choices=['avro']),
     value_schema=dict(type=str),
-    key_serializer=dict(type=str,choices=['avro']),
+    key_serializer=dict(type=str, choices=['avro']),
     key_schema=dict(type=str),
+    registry_url=(dict(type=str)),
 )
 
 required_by = {
@@ -155,16 +156,18 @@ def serialize(serializer, schema, message):
     if message is None:
         return None
 
-    assert schema is not None, \
-        "Schema must be provided to serialize"
+    # assert schema is not None, \
+    #     "Schema must be provided to serialize"
 
     if serializer == 'avro':
         schema_obj = avro.schema.parse(json.dumps(schema))
         return encode_avro(schema_obj, message)
+    else:
+        return message.encode()
 
 
 def encode_avro(schema, message):
-    writer = avro.io.DatumWriter(schema)
+    writer = DatumWriter(schema)
     bytes_writer = io.BytesIO()
     encoder = avro.io.BinaryEncoder(bytes_writer)
     writer.write(message, encoder)
@@ -174,13 +177,12 @@ def encode_avro(schema, message):
 
 def produce_message(producer_config, topic, key, value):
     producer = KafkaProducer(**producer_config)
-    producer.send(topic,  key=key, value=value)
+    producer.send(topic, key=key, value=value)
     producer.flush()
     producer.close()
 
 
 def main():
-
     module = setup_module_object()
     topic = module.params['topic']
     producer_config = module.params['producer_config']
@@ -192,21 +194,28 @@ def main():
     key_schema = module.params['key_schema']
 
     # Set SASL auth password
-    if producer_config['sasl_mechanism'] in ('PLAIN', 'SCRAM-SHA-256', 'SCRAM-SHA-512'):
-        producer_config['sasl_plain_password'] = set_sasl_password(module.params)
-        assert producer_config['sasl_plain_password'] is not None, \
-            "sasl_plain_password is required with sasl_mechanism mechanism of {producer_config['sasl_mechanism']}"
+    if 'sasl_mechanism' in producer_config:
+        if producer_config['sasl_mechanism'] in ('PLAIN', 'SCRAM-SHA-256', 'SCRAM-SHA-512'):
+            producer_config['sasl_plain_password'] = set_sasl_password(module.params)
+            assert producer_config['sasl_plain_password'] is not None, \
+                "sasl_plain_password is required with sasl_mechanism mechanism of {producer_config['sasl_mechanism']}"
 
     # Set SSL certificate password
     ssl_password = None
-    if producer_config['security_protocol'] in ('SSL', 'SASL_SSL'):
-        ssl_password = set_ssl_password(module.params)
+    if 'security_protocol' in producer_config:
+        if producer_config['security_protocol'] in ('SSL', 'SASL_SSL'):
+            ssl_password = set_ssl_password(module.params)
 
     if ssl_password is not None:
         producer_config['ssl_password'] = ssl_password
 
     value = serialize(value_serializer, value_schema, msg_value)
-    key = serialize(key_serializer, key_schema, msg_key)
+
+    if msg_key is not None:
+        key = serialize(key_serializer, key_schema, msg_key)
+    else:
+        key = None
+
     produce_message(producer_config, key, value, topic)
 
     module.exit_json(msg="message successfully published")
