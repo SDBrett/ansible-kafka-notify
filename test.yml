@@ -1,0 +1,27 @@
+- hosts: localhost
+  vars:
+    topic: testTopic
+    producer_config:
+      bootstrap_servers: 'localhost:9092'
+
+  tasks:
+    - name: notify
+      kafka_notify:
+        producer_config:
+          bootstrap_servers: 'localhost:9092'
+        msg: "my test message"
+        topic: testTopic
+    - name: create file
+      file:
+        path: ~/testFile
+        state: touch
+      register: msg
+      notify: test
+
+  handlers:
+    - name: test
+      kafka_notify:
+        producer_config: "{{ producer_config }}"
+        msg: "{{ msg }}"
+        topic: "{{ topic }}"
+
