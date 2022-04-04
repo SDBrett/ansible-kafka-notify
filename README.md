@@ -21,4 +21,7 @@ This module requires the following Python modules
   - [ ] JSON
   - [ ] Protobuff
 - [ ] Support Schema validation
+- [ ] Registry Support
+  - [ ] Confluent Registry
+  - [ ] Apicurio
 - [ ] Create tests
