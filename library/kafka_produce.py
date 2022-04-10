@@ -103,9 +103,10 @@ EXAMPLES = r'''
 from ansible.module_utils.basic import AnsibleModule
 import io
 from kafka import KafkaProducer
+import json
 import avro.schema
 from avro.io import DatumWriter
-import json
+from jsonschema import validate
 
 argument_spec = dict(
     topic=dict(type='str', required=True),
@@ -156,14 +157,20 @@ def serialize(serializer, schema, message):
     if message is None:
         return None
 
-    # assert schema is not None, \
-    #     "Schema must be provided to serialize"
-
     if serializer == 'avro':
         schema_obj = avro.schema.parse(json.dumps(schema))
         return encode_avro(schema_obj, message)
+    elif serializer == 'json':
+        return encode_json(schema, message)
     else:
         return message.encode()
+
+
+def encode_json(schema, message):
+    message_obj = json.loads(message)
+    if schema is not None:
+        validate(message_obj, schema)
+    return message.encode()
 
 
 def encode_avro(schema, message):

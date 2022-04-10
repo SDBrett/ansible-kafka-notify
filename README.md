@@ -17,8 +17,8 @@ This module requires the following Python modules
 # TODO
 
 - [ ] Support for different encodings
-  - [ ] Avro
-  - [ ] JSON
+  - [X] Avro
+  - [X] JSON
   - [ ] Protobuff
 - [ ] Support Schema validation
 - [ ] Registry Support

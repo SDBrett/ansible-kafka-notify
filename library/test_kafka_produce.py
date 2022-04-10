@@ -246,6 +246,64 @@ class TestAvroEncoding(ModuleTestCase):
                 kafka_produce.encode_avro(schema=json.dumps(item['schema']), message=item['string'])
 
 
+class TestJsonEncoding(ModuleTestCase):
+
+    def setUp(self):
+        super(TestJsonEncoding, self).setUp()
+        self.module = kafka_produce
+
+    def tearDown(self):
+        super(TestJsonEncoding, self).tearDown()
+
+    def test_serialize(self):
+        """
+        to test:
+        - Schema and string do not align
+        - Schema invalid JSON format
+        - No Schema
+        - Schema not json suitable
+        """
+
+        success_test_cases = [
+            {
+                'schema': {"type": "object", "properties": {"price": {"type": "number"}, "name": {"type": "string"},},},
+                'string': '{"name": "Eggs", "price":  34.99}'
+            }
+        ]
+        error_test_cases = [
+            # No Schema supplied
+            {
+                'schema': None,
+                'string': {"id": "2134", "payload": {"temperature": 23.2, "humidity": 94.3, "pressure": 122.3}}
+            },
+            # TODO Bad Schema string
+            {
+                'schema': {"type": "object", "properties": {"price": {"type": "number"}, "name": {"type": "string"},},},
+                'string': '{"name": "Eggs", "price":  "3a4.99"}'
+            },
+            {
+                'schema': {"type": "object", "properties": {"price": {"type": "number"},  "name": {"type": "string"},},},
+                'string': {"id": 2134, "payload": {"temperature": 23.2, "humidity": 94.3, "pressure": 122.3}}
+            },
+            {
+                'schema': {"additionalProperties": False, "type": "object", "properties": {"price": {"type": "number"}, "name": {"type": "string"},},},
+                'string': {"id": "2134", "badfield": "test", "payload": {"temperature": 23.2, "humidity": 94.3, "pressure": 122.3}}
+            }
+        ]
+
+        none_test_result = kafka_produce.serialize(serializer='json', schema=None, message=None)
+        self.assertEqual(none_test_result, None)
+
+        for item in success_test_cases:
+            kafka_produce.serialize('json', schema=item['schema'], message=item['string'])
+            kafka_produce.encode_json(item['schema'], message=item['string'])
+
+        with self.assertRaises(Exception):
+            for item in error_test_cases:
+                kafka_produce.serialize('json', schema=item['schema'], message=item['string'])
+                kafka_produce.encode_json(item['schema'], message=item['string'])
+
+
 @patch("kafka_produce.KafkaProducer")
 def test_produce_message(mock_producer_class):
     producer_config = {
